@@ -100,13 +100,18 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   btnContainer: {
-    marginTop: 20,
+    marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: '#000',
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   actionBtnText: {
     color: '#fff',
@@ -114,7 +119,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resendContainer: {
-    marginTop: 20,
+    marginTop: 24,
     alignItems: 'center',
   },
   toggleText: {
@@ -122,9 +127,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   toggleBtnText: {
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
 });
 
-export default OTPVerificationScreen; 
+export default OTPVerificationScreen;

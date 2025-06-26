@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Text,
   Image,
   ScrollView,
@@ -13,19 +12,33 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import InputField from '../components/InputField';
 
 type SignUpScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
 };
 
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+});
+
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
+  const handleFormSubmit = (values: any) => {
+    console.log('Form Submitted:', values);
+    navigation.navigate('Home');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.wrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -33,7 +46,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           <View style={styles.topSection}>
             <View style={styles.logoWrapper}>
               <View style={styles.logoContainer}>
-                <Image 
+                <Image
                   source={require('../assets/logo.png')}
                   style={styles.logo}
                 />
@@ -42,54 +55,42 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             <Text style={styles.welcomeText}>Sign Up to get Register!</Text>
           </View>
 
-          <View style={styles.formSection}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="First name"
-                placeholderTextColor="#999"
-              />
-            </View>
+          <Formik
+            initialValues={{
+              name: '',
+              email: '',
+              password: '',
+            }}
+            onSubmit={handleFormSubmit}
+            validationSchema={validationSchema}
+          >
+            {formikProps => (
+              <View style={styles.formSection}>
+                <InputField type="text" name="name" label="Name" placeholder="Enter Name" formik={formikProps}/>
+                <InputField type="email" name="email" label="Email" placeholder="Email address" formik={formikProps}/>
+                <InputField type="password" name="password" label="Password" placeholder="Password" formik={formikProps}/>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Email address"
-                keyboardType="email-address"
-                placeholderTextColor="#999"
-              />
-            </View>
+                <View style={styles.btnContainer}>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => formikProps.handleSubmit()}
+                  >
+                    <Text style={styles.actionBtnText}>Sign Up</Text>
+                  </TouchableOpacity>
+                </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.btnContainer}>
-              <TouchableOpacity 
-                style={styles.actionBtn}
-                onPress={() => navigation.navigate('Home')}
-              >
-                <Text style={styles.actionBtnText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity 
-              style={styles.toggleContainer} 
-              onPress={() => navigation.navigate('SignIn')}
-            >
-              <Text style={styles.toggleText}>
-                Already have an account? <Text style={styles.toggleBtnText}>Sign In</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
+                <TouchableOpacity
+                  style={styles.toggleContainer}
+                  onPress={() => navigation.navigate('SignIn')}
+                >
+                  <Text style={styles.toggleText}>
+                    Already have an account?{' '}
+                    <Text style={styles.toggleBtnText}>Sign In</Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Formik>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -117,6 +118,7 @@ const styles = StyleSheet.create({
   },
   logoWrapper: {
     marginBottom: 24,
+     marginTop: 40,
   },
   logoContainer: {
     width: 120,
@@ -126,10 +128,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
@@ -149,37 +148,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingBottom: 24,
   },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 15,
-    borderRadius: 12,
-    fontSize: 16,
-    color: '#000',
-    backgroundColor: '#F9FAFB',
-  },
   btnContainer: {
     marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#007AFF',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
@@ -198,9 +176,9 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   toggleBtnText: {
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
 });
 
-export default SignUpScreen; 
+export default SignUpScreen;

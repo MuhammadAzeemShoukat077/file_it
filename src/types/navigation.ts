@@ -5,7 +5,13 @@ export type RootStackParamList = {
   OTPVerification: undefined;
   ResetPassword: undefined;
   Home: undefined;
-  DetailCard: undefined;
+  DetailCard: {
+    id: number;
+    title: string;
+    date: string;
+    address: string;
+    image: any;
+  };
   GetStarted: undefined;
   // Add more screens here as needed
 }; 

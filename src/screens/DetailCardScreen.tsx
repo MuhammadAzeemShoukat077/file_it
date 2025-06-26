@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,21 +8,68 @@ import {
   StatusBar,
   Platform,
   Dimensions,
+  Image,
+  Share,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 
 const { width } = Dimensions.get('window');
 
 type DetailCardScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'DetailCard'>;
+  route: RouteProp<RootStackParamList, 'DetailCard'>;
 };
 
-const DetailCardScreen: React.FC<DetailCardScreenProps> = ({ navigation }) => {
+const DetailCardScreen: React.FC<DetailCardScreenProps> = ({ navigation, route }) => {
+  const { title, date, address, image } = route.params;
+  const [isImageFullScreen, setImageFullScreen] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Check out this document: ${title}`,
+        url: image, // Use cloud URL when available
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share document');
+    }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Document',
+      'Are you sure you want to delete this document?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // TODO: Delete from Google Cloud Storage
+              // TODO: Delete from local storage
+              navigation.goBack();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete document');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      {/* Header */}
       <View style={styles.headerContainer}>
         <TouchableOpacity
           style={styles.backButton}
@@ -30,9 +77,9 @@ const DetailCardScreen: React.FC<DetailCardScreenProps> = ({ navigation }) => {
         >
           <Icon name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>HOME DEPOT</Text>
-        <TouchableOpacity style={styles.moreButton}>
-          <Icon name="ellipsis-vertical" size={20} color="#000" />
+        <Text style={styles.headerTitle}>{title}</Text>
+        <TouchableOpacity style={styles.moreButton} onPress={handleShare}>
+          <Icon name="share-outline" size={24} color="#000" />
         </TouchableOpacity>
       </View>
 
@@ -42,64 +89,95 @@ const DetailCardScreen: React.FC<DetailCardScreenProps> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <View style={styles.imageContainer}>
-            <View style={styles.imagePlaceholder}>
-              <Icon name="image-outline" size={48} color="#666" />
-            </View>
-            <TouchableOpacity style={styles.moreButton}>
-              <Icon name="ellipsis-vertical" size={20} color="#000" />
-            </TouchableOpacity>
-          </View>
+          {/* Image Section */}
+          <TouchableOpacity 
+            style={[
+              styles.imageContainer,
+              isImageFullScreen && styles.fullScreenImage
+            ]}
+            onPress={() => setImageFullScreen(!isImageFullScreen)}
+          >
+            <Image 
+              source={image}
+              style={styles.image}
+              resizeMode={isImageFullScreen ? "contain" : "cover"}
+            />
+            {!isImageFullScreen && (
+              <View style={styles.imageOverlay}>
+                <TouchableOpacity onPress={handleShare}>
+                  <Icon name="share-outline" size={24} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDelete}>
+                  <Icon name="trash-outline" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            )}
+          </TouchableOpacity>
           
-          <View style={styles.detailsContainer}>
-            <Text style={styles.date}>25-03-2023</Text>
-            <View style={styles.addressContainer}>
-              <Icon name="location-outline" size={16} color="#007AFF" />
-              <Text style={styles.address}>540 Monroe des Plaines, Tennessee</Text>
-            </View>
-            
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>4.8</Text>
-                <Text style={styles.statLabel}>Rating</Text>
+          {/* Details Section */}
+          {!isImageFullScreen && (
+            <View style={styles.detailsContainer}>
+              <Text style={styles.date}>{date}</Text>
+              <View style={styles.addressContainer}>
+                <Icon name="location-outline" size={16} color="#007AFF" />
+                <Text style={styles.address}>{address}</Text>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>2.1k</Text>
-                <Text style={styles.statLabel}>Reviews</Text>
+              
+              <View style={styles.actionButtons}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="cloud-download-outline" size={24} color="#007AFF" />
+                  <Text style={styles.actionButtonText}>Download</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="create-outline" size={24} color="#007AFF" />
+                  <Text style={styles.actionButtonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.deleteButton]}
+                  onPress={handleDelete}
+                >
+                  <Icon name="trash-outline" size={24} color="#FF3B30" />
+                  <Text style={[styles.actionButtonText, styles.deleteText]}>Delete</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>5.2k</Text>
-                <Text style={styles.statLabel}>Visits</Text>
-              </View>
-            </View>
 
-            <View style={styles.descriptionContainer}>
-              <Text style={styles.sectionTitle}>About</Text>
-              <Text style={styles.description}>
-                Home Depot is your one-stop destination for all home improvement needs. 
-                We offer a wide range of products and expert advice to help you with your projects.
-              </Text>
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.sectionTitle}>Document Info</Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Size:</Text>
+                  <Text style={styles.infoValue}>2.4 MB</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Type:</Text>
+                  <Text style={styles.infoValue}>Image/JPEG</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Uploaded:</Text>
+                  <Text style={styles.infoValue}>{date}</Text>
+                </View>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </ScrollView>
 
-      <View style={styles.bottomNavContainer}>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="call-outline" size={22} color="#000" />
-          <Text style={styles.navText}>Call</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="navigate-outline" size={22} color="#000" />
-          <Text style={styles.navText}>Navigate</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="bookmark-outline" size={22} color="#000" />
-          <Text style={styles.navText}>Save</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Navigation */}
+      {!isImageFullScreen && (
+        <View style={styles.bottomNavContainer}>
+          <TouchableOpacity style={styles.navItem}>
+            <Icon name="download-outline" size={22} color="#000" />
+            <Text style={styles.navText}>Download</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Icon name="share-outline" size={22} color="#000" />
+            <Text style={styles.navText}>Share</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Icon name="create-outline" size={22} color="#000" />
+            <Text style={styles.navText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -150,13 +228,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: width,
     height: width * 0.7,
-    backgroundColor: '#F5F5F5',
   },
-  imagePlaceholder: {
+  image: {
     width: '100%',
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   detailsContainer: {
     padding: 16,
@@ -182,34 +257,26 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-  statsContainer: {
+  actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+    marginVertical: 20,
+    paddingHorizontal: 16,
+  },
+  actionButton: {
     alignItems: 'center',
-    paddingVertical: 16,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    padding: 12,
   },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
+  actionButtonText: {
+    color: '#007AFF',
+    fontSize: 12,
+    marginTop: 4,
   },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 4,
+  deleteButton: {
+    borderRadius: 8,
   },
-  statLabel: {
-    fontSize: 13,
-    color: '#666',
-  },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#E0E0E0',
+  deleteText: {
+    color: '#FF3B30',
   },
   descriptionContainer: {
     marginTop: 4,
@@ -220,10 +287,21 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 8,
   },
-  description: {
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  infoLabel: {
     fontSize: 14,
     color: '#666',
-    lineHeight: 20,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
   bottomNavContainer: {
     flexDirection: 'row',
@@ -244,6 +322,18 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 12,
     marginTop: 4,
+  },
+  fullScreenImage: {
+    width: width,
+    height: '100%',
+    backgroundColor: '#000',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 16,
   },
 });
 

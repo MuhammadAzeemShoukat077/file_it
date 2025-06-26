@@ -3,46 +3,66 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Text,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import InputField from '../components/InputField';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 
 type ForgotPasswordScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ForgotPassword'>;
 };
 
+const validationSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email'),
+});
+
 const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }) => {
+  const handleSubmit = (values: any) => {
+    console.log('Email Submitted:', values.email);
+    navigation.navigate('OTPVerification');
+  };
+
   return (
     <View style={styles.wrapper}>
       <Text style={styles.formHeadText}>Forgot Password</Text>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your email address"
-          keyboardType="email-address"
-          placeholderTextColor="#999"
-        />
-      </View>
+      <Formik
+        initialValues={{ email: '' }}
+        onSubmit={handleSubmit}
+        validationSchema={validationSchema}
+      >
+        {formikProps => (
+          <>
+            <InputField
+              type="email"
+              name="email"
+              label="Email"
+              placeholder="Enter your email address"
+              formik={formikProps}
+            />
 
-      <View style={styles.btnContainer}>
-        <TouchableOpacity 
-          style={styles.actionBtn}
-          onPress={() => navigation.navigate('OTPVerification')}
-        >
-          <Text style={styles.actionBtnText}>Send Reset Link</Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.btnContainer}>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => formikProps.handleSubmit()}
+              >
+                <Text style={styles.actionBtnText}>Send Reset Link</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </Formik>
 
-      <TouchableOpacity 
-        style={styles.toggleContainer} 
+      <TouchableOpacity
+        style={styles.toggleContainer}
         onPress={() => navigation.navigate('SignIn')}
       >
         <Text style={styles.toggleText}>
-          Remember your password? <Text style={styles.toggleBtnText}>Sign In</Text>
+          Remember your password?{' '}
+          <Text style={styles.toggleBtnText}>Sign In</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -61,30 +81,19 @@ const styles = StyleSheet.create({
     paddingVertical: 50,
     color: '#000',
   },
-  inputContainer: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    borderRadius: 5,
-    fontSize: 16,
-    color: '#000',
-  },
   btnContainer: {
-    marginTop: 20,
+    marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: '#000',
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   actionBtnText: {
     color: '#fff',
@@ -92,7 +101,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   toggleContainer: {
-    marginTop: 20,
+    marginTop: 24,
     alignItems: 'center',
   },
   toggleText: {
@@ -100,9 +109,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   toggleBtnText: {
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
 });
 
-export default ForgotPasswordScreen; 
+export default ForgotPasswordScreen;

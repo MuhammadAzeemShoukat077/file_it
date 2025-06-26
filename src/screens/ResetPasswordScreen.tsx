@@ -3,49 +3,70 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Text,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import InputField from '../components/InputField';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 
 type ResetPasswordScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ResetPassword'>;
 };
 
+const validationSchema = Yup.object().shape({
+  password: Yup.string()
+    .min(6, 'Password must be at least 6 characters'),
+    // .required('New password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password'), ''], 'Passwords must match'),
+    // .required('Please confirm your password'),
+});
+
 const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation }) => {
+  const handleReset = (values: any) => {
+    console.log('Resetting password with values:', values);
+    navigation.navigate('SignIn');
+  };
+
   return (
     <View style={styles.wrapper}>
       <Text style={styles.formHeadText}>Reset Password</Text>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>New Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter new password"
-          secureTextEntry
-          placeholderTextColor="#999"
-        />
-      </View>
+      <Formik
+        initialValues={{ password: '', confirmPassword: '' }}
+        onSubmit={handleReset}
+        validationSchema={validationSchema}
+      >
+        {formikProps => (
+          <>
+            <InputField
+              type="password"
+              name="password"
+              label="New Password"
+              placeholder="Enter new password"
+              formik={formikProps}
+            />
+            <InputField
+              type="password"
+              name="confirmPassword"
+              label="Confirm New Password"
+              placeholder="Confirm new password"
+              formik={formikProps}
+            />
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Confirm New Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm new password"
-          secureTextEntry
-          placeholderTextColor="#999"
-        />
-      </View>
-
-      <View style={styles.btnContainer}>
-        <TouchableOpacity 
-          style={styles.actionBtn}
-          onPress={() => navigation.navigate('SignIn')}
-        >
-          <Text style={styles.actionBtnText}>Reset Password</Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.btnContainer}>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => formikProps.handleSubmit()}
+              >
+                <Text style={styles.actionBtnText}>Reset Password</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </Formik>
     </View>
   );
 };
@@ -62,30 +83,19 @@ const styles = StyleSheet.create({
     paddingVertical: 50,
     color: '#000',
   },
-  inputContainer: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    borderRadius: 5,
-    fontSize: 16,
-    color: '#000',
-  },
   btnContainer: {
-    marginTop: 20,
+    marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: '#000',
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   actionBtnText: {
     color: '#fff',
@@ -94,4 +104,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ResetPasswordScreen; 
+export default ResetPasswordScreen;

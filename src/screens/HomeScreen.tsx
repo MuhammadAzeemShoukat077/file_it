@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,9 @@ import {
   ScrollView,
   StatusBar,
   Platform,
+  Dimensions,
+  Image,
+  Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,36 +20,119 @@ type HomeScreenProps = {
 };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const listItems = [
+  const [isScanModalVisible, setScanModalVisible] = useState(false);
+
+  // Sample data with image URLs (replace with your actual data)
+  const galleryItems = [
     {
       id: 1,
       title: 'Home Depot',
       date: '25-03-2023',
       address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
     },
     {
       id: 2,
       title: 'Home Depot',
       date: '25-03-2023',
       address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
     },
     {
       id: 3,
       title: 'Home Depot',
       date: '25-03-2023',
       address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
+    },
+    {
+      id: 4,
+      title: 'Home Depot',
+      date: '25-03-2023',
+      address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
+    },
+    {
+      id: 5,
+      title: 'Home Depot',
+      date: '25-03-2023',
+      address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
+    },
+    {
+      id: 6,
+      title: 'Home Depot',
+      date: '25-03-2023',
+      address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
+    },
+    {
+      id: 7,
+      title: 'Home Depot',
+      date: '25-03-2023',
+      address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
+    },
+    {
+      id: 8,
+      title: 'Home Depot',
+      date: '25-03-2023',
+      address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
+    },
+    {
+      id: 9,
+      title: 'Home Depot',
+      date: '25-03-2023',
+      address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
+    },{
+      id: 10,
+      title: 'Home Depot',
+      date: '25-03-2023',
+      address: '540 Monroe des Plaines, Tennessee',
+      image: require('../assets/background.jpg'), 
     },
   ];
+
+  // Function to handle scanning/taking picture
+  const handleScan = () => {
+    // TODO: Implement camera functionality
+    setScanModalVisible(false);
+  };
+
+  // Function to handle uploading from gallery
+  const handleUploadFromGallery = () => {
+    // TODO: Implement gallery picker
+    setScanModalVisible(false);
+  };
+
+  // Function to handle upload to Google Cloud Storage
+  // const handleUploadToCloud = async (imageUri: string) => {
+  //   // TODO: Implement Google Cloud Storage upload
+  //   try {
+  //     // 1. Get signed URL from your backend
+  //     // 2. Upload image to Google Cloud Storage
+  //     // 3. Save metadata to your database
+  //     // 4. Update local state
+  //   } catch (error) {
+  //     console.error('Upload failed:', error);
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.headerContainer}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Home Depot</Text>
+          <Text style={styles.headerTitle}>My Documents</Text>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.cameraButton}>
-              <Icon name="camera-outline" size={22} color="#666" />
+            <TouchableOpacity 
+              style={styles.scanButton}
+              onPress={() => setScanModalVisible(true)}
+            >
+              <Icon name="scan-outline" size={22} color="#fff" />
+              <Text style={styles.scanText}>Scan</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.profileButton}>
               <Icon name="person" size={20} color="#666" />
@@ -60,64 +146,93 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.uploadSection}>
-          <TouchableOpacity style={styles.uploadButton}>
-            <View style={styles.uploadIconContainer}>
-              <Icon name="camera" size={28} color="#007AFF" />
-            </View>
-            <Text style={styles.uploadTitle}>Upload Photo</Text>
-            <Text style={styles.uploadSubtitle}>Take a photo or choose from gallery</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Uploads</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllButton}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-        {listItems.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={styles.card}
-            onPress={() => navigation.navigate('DetailCard')}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.locationInfo}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.date}>{item.date}</Text>
-                <View style={styles.addressContainer}>
-                  <View style={styles.locationIconContainer}>
-                    <Icon name="location" size={14} color="#007AFF" />
-                  </View>
-                  <Text style={styles.address}>{item.address}</Text>
-                </View>
+        <View style={styles.galleryGrid}>
+          {galleryItems.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.galleryItem}
+              onPress={() => navigation.navigate('DetailCard', {
+                id: item.id,
+                title: item.title,
+                date: item.date,
+                address: item.address,
+                image: item.image,
+                // cloudUrl: item.cloudUrl // Add cloud storage URL
+              })}
+            >
+              <Image
+                source={item.image}
+                style={styles.galleryImage}
+                resizeMode="cover"
+              />
+              <View style={styles.imageOverlay}>
+                <Text style={styles.imageTitle} numberOfLines={1}>
+                  {item.title}
+                </Text>
+                <Text style={styles.imageDate}>{item.date}</Text>
               </View>
-              <View style={styles.imageContainer}>
-                <View style={styles.imagePlaceholder} />
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
       
       <View style={styles.bottomNavContainer}>
         <View style={styles.bottomNav}>
           <TouchableOpacity style={styles.navItem}>
-            <Icon name="search" size={24} color="#fff" />
+            <Icon name="images-outline" size={24} color="#fff" />
+            <Text style={styles.navText}>Gallery</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.navItem, styles.scanNavItem]}
+            onPress={() => setScanModalVisible(true)}
+          >
+            <View style={styles.scanIconContainer}>
+              <Icon name="scan" size={32} color="#fff" />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem}>
-            <Icon name="heart-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Icon name="person-outline" size={24} color="#fff" />
+            <Icon name="folder-outline" size={24} color="#fff" />
+            <Text style={styles.navText}>Files</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Scan Modal */}
+      <Modal
+        visible={isScanModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setScanModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Document</Text>
+            
+            <TouchableOpacity style={styles.modalButton} onPress={handleScan}>
+              <Icon name="camera-outline" size={24} color="#007AFF" />
+              <Text style={styles.modalButtonText}>Take Picture</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalButton} onPress={handleUploadFromGallery}>
+              <Icon name="images-outline" size={24} color="#007AFF" />
+              <Text style={styles.modalButtonText}>Choose from Gallery</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.modalCancelButton}
+              onPress={() => setScanModalVisible(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
+
+const { width } = Dimensions.get('window');
+const itemSize = (width - 48) / 2; // 2 items per row with 16px padding on each side and 16px gap
 
 const styles = StyleSheet.create({
   container: {
@@ -147,13 +262,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  cameraButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
+  scanButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  scanText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   profileButton: {
     width: 40,
@@ -168,73 +289,43 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 24,
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  cardContent: {
+  galleryGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 16,
   },
-  locationInfo: {
-    flex: 1,
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 4,
-  },
-  date: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 12,
-  },
-  addressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  locationIconContainer: {
-    width: 24,
-    height: 24,
+  galleryItem: {
+    width: itemSize,
+    height: itemSize,
     borderRadius: 12,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
+    overflow: 'hidden',
   },
-  address: {
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
-    lineHeight: 20,
-  },
-  imageContainer: {
-    width: 100,
-    height: 100,
-  },
-  imagePlaceholder: {
+  galleryImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#F0F0F0',
-    borderRadius: 12,
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 8,
+  },
+  imageTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  imageDate: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 2,
   },
   bottomNavContainer: {
     backgroundColor: '#333',
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16, // Add extra padding for iOS home indicator
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
   },
   bottomNav: {
     flexDirection: 'row',
@@ -246,53 +337,72 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  uploadSection: {
-    marginBottom: 24,
+  scanNavItem: {
+    marginTop: -30,
   },
-  uploadButton: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#007AFF',
-    borderStyle: 'dashed',
-  },
-  uploadIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+  scanIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  uploadTitle: {
-    fontSize: 18,
+  navText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
     fontWeight: '600',
-    color: '#007AFF',
-    marginBottom: 8,
-  },
-  uploadSubtitle: {
-    fontSize: 14,
-    color: '#666',
+    color: '#000',
+    marginBottom: 20,
     textAlign: 'center',
   },
-  sectionHeader: {
+  modalButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#F8F9FA',
+    marginBottom: 12,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1A1A1A',
-  },
-  seeAllButton: {
-    fontSize: 14,
+  modalButtonText: {
+    fontSize: 16,
     color: '#007AFF',
-    fontWeight: '500',
+    marginLeft: 12,
+  },
+  modalCancelButton: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    marginTop: 8,
+  },
+  modalCancelText: {
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 

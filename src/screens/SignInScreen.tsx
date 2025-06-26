@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Text,
   Image,
   ScrollView,
@@ -13,19 +12,33 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import InputField from '../components/InputField';
 
 type SignInScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignIn'>;
 };
 
+// Optional validation schema
+const validationSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email'),
+  password: Yup.string().min(6, 'Password must be at least 6 characters'),
+});
+
 const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
+  const handleFormSubmit = (values: any) => {
+    console.log('Form Submitted:', values);
+    navigation.navigate('Home');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.wrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -33,7 +46,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
           <View style={styles.topSection}>
             <View style={styles.logoWrapper}>
               <View style={styles.logoContainer}>
-                <Image 
+                <Image
                   source={require('../assets/logo.png')}
                   style={styles.logo}
                 />
@@ -42,51 +55,63 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
             <Text style={styles.welcomeText}>Welcome Back!</Text>
           </View>
 
-          <View >
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Email address"
-                keyboardType="email-address"
-                placeholderTextColor="#999"
-              />
-            </View>
+          <Formik
+            initialValues={{
+              email: '',
+              password: '',
+            }}
+            onSubmit={handleFormSubmit}
+            validationSchema={validationSchema}
+            validateOnMount={false}
+          >
+            {formikProps => (
+              <View style={styles.formSection}>
+                <InputField
+                  type="email"
+                  name="email"
+                  label="Email"
+                  placeholder="Email address"
+                  formik={formikProps}
+                />
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                placeholderTextColor="#999"
-              />
-              <TouchableOpacity 
-                style={styles.forgotPasswordContainer}
-                onPress={() => navigation.navigate('ForgotPassword')}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
-            </View>
+                <InputField
+                  type="password"
+                  name="password"
+                  label="Password"
+                  placeholder="Password"
+                  formik={formikProps}
+                />
 
-            <View style={styles.btnContainer}>
-              <TouchableOpacity 
-                style={styles.actionBtn}
-                onPress={() => navigation.navigate('Home')}
-              >
-                <Text style={styles.actionBtnText}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  style={styles.forgotPasswordContainer}
+                  onPress={() => navigation.navigate('ForgotPassword')}
+                >
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.toggleContainer} 
-              onPress={() => navigation.navigate('SignUp')}
-            >
-              <Text style={styles.toggleText}>
-                Don't have an account? <Text style={styles.toggleBtnText}>Sign Up</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
+                <View style={styles.btnContainer}>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => {
+                      formikProps.handleSubmit();
+                      navigation.navigate('Home');
+                    }}
+                  >
+                    <Text style={styles.actionBtnText}>Sign In</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.toggleContainer}
+                  onPress={() => navigation.navigate('SignUp')}
+                >
+                  <Text style={styles.toggleText}>
+                    Don't have an account? <Text style={styles.toggleBtnText}>Sign Up</Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Formik>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -100,6 +125,12 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 24,
   },
   topSection: {
     alignItems: 'center',
@@ -136,36 +167,18 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     marginBottom: 8,
   },
-  // formSection: {
-  //   flex: 1,
-  // },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 15,
-    borderRadius: 12,
-    fontSize: 16,
-    color: '#000',
-    backgroundColor: '#F9FAFB',
+  formSection: {
+    paddingBottom: 24,
   },
   btnContainer: {
     marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#007AFF',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -188,7 +201,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   toggleBtnText: {
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
   forgotPasswordContainer: {
@@ -196,15 +209,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   forgotPasswordText: {
-    color: '#007AFF',
+    color: '#000',
     fontSize: 14,
     fontWeight: '500',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 24,
   },
 });
 
