@@ -5,51 +5,30 @@
  * @format
  */
 
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import SignInScreen from './src/screens/SignInScreen';
-import SignUpScreen from './src/screens/SignUpScreen';
-import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
-import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
-import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import DetailCardScreen from './src/screens/DetailCardScreen';
-import GetStartedScreen from './src/screens/GetStartedScreen';
-import { RootStackParamList } from './src/types/navigation';
+import { SafeAreaView, StyleSheet } from 'react-native';
+import { Provider } from 'react-redux';
+import store from './src/reducers/store';
+import Routes from './src/routes';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+export const navigationRef = createNavigationContainerRef();
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-        <Stack.Navigator 
-          initialRouteName="GetStarted"
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="GetStarted" component={GetStartedScreen} />
-          <Stack.Screen name="SignIn" component={SignInScreen} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-          <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
-          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="DetailCard" component={DetailCardScreen} />
-        </Stack.Navigator>
-      </SafeAreaView>
+    <NavigationContainer ref={navigationRef}>
+      <Provider store={store}>
+        <SafeAreaView style={styles.container}>
+          <Routes />
+        </SafeAreaView>
+      </Provider>
     </NavigationContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 });
 
