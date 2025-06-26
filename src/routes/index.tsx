@@ -8,6 +8,7 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import HomeScreen from '../screens/HomeScreen';
 import DetailCardScreen from '../screens/DetailCardScreen';
 import GetStartedScreen from '../screens/GetStartedScreen';
+import CameraScreen from '../screens/CameraScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -28,6 +29,7 @@ const Routes = () => {
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="DetailCard" component={DetailCardScreen} />
+      <Stack.Screen name="Camera" component={CameraScreen} />
     </Stack.Navigator>
   );
 };

@@ -4,7 +4,7 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   OTPVerification: undefined;
   ResetPassword: undefined;
-  Home: undefined;
+  Home: { capturedImage?: string } | undefined;
   DetailCard: {
     id: number;
     title: string;
@@ -13,5 +13,6 @@ export type RootStackParamList = {
     image: any;
   };
   GetStarted: undefined;
+  Camera: undefined;
   // Add more screens here as needed
 }; 

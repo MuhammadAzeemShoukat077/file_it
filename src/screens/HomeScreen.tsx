@@ -97,8 +97,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   // Function to handle scanning/taking picture
   const handleScan = () => {
-    // TODO: Implement camera functionality
     setScanModalVisible(false);
+    navigation.navigate('Camera');
   };
 
   // Function to handle uploading from gallery
