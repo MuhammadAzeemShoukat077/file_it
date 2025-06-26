@@ -11,18 +11,26 @@ import { SafeAreaView, StyleSheet } from 'react-native';
 import { Provider } from 'react-redux';
 import store from './src/reducers/store';
 import Routes from './src/routes';
+import axiosInitialization from './src/config/axiosInterceptor';
+import Toast from 'react-native-toast-message';
 
 export const navigationRef = createNavigationContainerRef();
 
+// Initialize axios with interceptors
+axiosInitialization();
+
 const App = () => {
   return (
-    <NavigationContainer ref={navigationRef}>
-      <Provider store={store}>
-        <SafeAreaView style={styles.container}>
-          <Routes />
-        </SafeAreaView>
-      </Provider>
-    </NavigationContainer>
+    <>
+      <NavigationContainer ref={navigationRef}>
+        <Provider store={store}>
+          <SafeAreaView style={styles.container}>
+            <Routes />
+          </SafeAreaView>
+        </Provider>
+      </NavigationContainer>
+      <Toast />
+    </>
   );
 };
 

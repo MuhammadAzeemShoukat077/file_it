@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,9 +9,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserData } from '../reducers/slices/UserSlice';
+import { setBtnLoader } from '../reducers/slices/ThemeSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { axiosInstance, ApiResponse } from '../config/axiosInterceptor';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import InputField from '../components/InputField';
@@ -20,25 +26,117 @@ type SignInScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignIn'>;
 };
 
-// Optional validation schema
+interface FormValues {
+  email: string;
+  password: string;
+}
+
 const validationSchema = Yup.object().shape({
-  email: Yup.string().email('Invalid email'),
-  password: Yup.string().min(6, 'Password must be at least 6 characters'),
+  email: Yup
+    .string()
+    .email('Please enter a valid email')
+    .required('Email is required'),
+  password: Yup
+    .string()
+    .required('Password is required'),
 });
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
-  const handleFormSubmit = (values: any) => {
-    console.log('Form Submitted:', values);
-    navigation.navigate('Home');
+  const dispatch = useDispatch();
+  const btnLoader = useSelector((state: any) => state.Theme.btnLoader);
+  const [apiError, setApiError] = useState('');
+
+  const handleFormSubmit = async (values: FormValues) => {
+    try {
+      setApiError('');
+      dispatch(setBtnLoader(true));
+
+      console.log('Sending login request with:', {
+        email: values.email,
+        password: '***' // password masked for security
+      });
+
+      const response = await axiosInstance.post<ApiResponse<{
+        token: {
+          type: string;
+          name: string | null;
+          token: string;
+          abilities: string[];
+          lastUsedAt: string | null;
+          expiresAt: string | null;
+        };
+        user: {
+          id: number;
+          fullName: string;
+          email: string;
+          type: number;
+          isActive: boolean;
+          createdAt: string;
+          updatedAt: string;
+        };
+      }>>('/api/login', {
+        email: values.email,
+        password: values.password,
+      });
+
+      console.log('Login response:', {
+        status: response.data?.status,
+        message: response.data?.message,
+        hasData: !!response.data?.data,
+        responseData: response.data
+      });
+
+      if (response.data?.status && response.data?.data) {
+        const userData = {
+          id: response.data.data.user.id.toString(),
+          fullName: response.data.data.user.fullName,
+          email: response.data.data.user.email,
+          token: response.data.data.token.token,
+        };
+        
+        dispatch(setUserData(userData));
+        await AsyncStorage.setItem('token', response.data.data.token.token);
+        
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
+        // Handle failed login more gracefully
+        const errorMsg = response.data?.message || 'Invalid email or password';
+        console.log('Login failed:', errorMsg);
+        setApiError(errorMsg);
+      }
+    } catch (error: any) {
+      console.error('Detailed login error:', {
+        name: error.name,
+        message: error.message,
+        response: {
+          data: error.response?.data,
+          status: error.response?.status,
+          headers: error.response?.headers
+        },
+        request: {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL
+        }
+      });
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Something went wrong';
+      setApiError(errorMessage);
+    } finally {
+      dispatch(setBtnLoader(false));
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
+      <KeyboardAvoidingView 
         style={styles.wrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
+        <ScrollView 
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -46,7 +144,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
           <View style={styles.topSection}>
             <View style={styles.logoWrapper}>
               <View style={styles.logoContainer}>
-                <Image
+                <Image 
                   source={require('../assets/logo.png')}
                   style={styles.logo}
                 />
@@ -55,54 +153,36 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
             <Text style={styles.welcomeText}>Welcome Back!</Text>
           </View>
 
-          <Formik
-            initialValues={{
-              email: '',
-              password: '',
-            }}
-            onSubmit={handleFormSubmit}
+          <Formik<FormValues>
+            initialValues={{ email: '', password: '' }}
             validationSchema={validationSchema}
-            validateOnMount={false}
+            onSubmit={handleFormSubmit}
           >
-            {formikProps => (
+            {({ handleSubmit, isSubmitting, ...formikProps }) => (
               <View style={styles.formSection}>
-                <InputField
-                  type="email"
-                  name="email"
-                  label="Email"
-                  placeholder="Email address"
-                  formik={formikProps}
-                />
+                <InputField type="email" name="email" label="Email" placeholder="Email address" formik={formikProps}/>
+                <InputField type="password" name="password" label="Password" placeholder="Password" formik={formikProps}/>
 
-                <InputField
-                  type="password"
-                  name="password"
-                  label="Password"
-                  placeholder="Password"
-                  formik={formikProps}
-                />
-
-                <TouchableOpacity
-                  style={styles.forgotPasswordContainer}
-                  onPress={() => navigation.navigate('ForgotPassword')}
-                >
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
+                {apiError ? (
+                  <Text style={styles.errorText}>{apiError}</Text>
+                ) : null}
 
                 <View style={styles.btnContainer}>
-                  <TouchableOpacity
-                    style={styles.actionBtn}
-                    onPress={() => {
-                      formikProps.handleSubmit();
-                      navigation.navigate('Home');
-                    }}
+                  <TouchableOpacity 
+                    style={[styles.actionBtn, (btnLoader || isSubmitting) && styles.actionBtnDisabled]}
+                    onPress={() => handleSubmit()}
+                    disabled={btnLoader || isSubmitting}
                   >
-                    <Text style={styles.actionBtnText}>Sign In</Text>
+                    {btnLoader || isSubmitting ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.actionBtnText}>Sign In</Text>
+                    )}
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  style={styles.toggleContainer}
+                <TouchableOpacity 
+                  style={styles.toggleContainer} 
                   onPress={() => navigation.navigate('SignUp')}
                 >
                   <Text style={styles.toggleText}>
@@ -130,15 +210,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 24,
+    flexGrow: 1,
   },
   topSection: {
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
   logoWrapper: {
     marginBottom: 24,
+    marginTop: 40,
   },
   logoContainer: {
     width: 120,
@@ -148,10 +229,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
@@ -168,6 +246,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   formSection: {
+    paddingHorizontal: 22,
     paddingBottom: 24,
   },
   btnContainer: {
@@ -204,15 +283,14 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '600',
   },
-  forgotPasswordContainer: {
-    alignItems: 'flex-end',
-    marginTop: 12,
-  },
-  forgotPasswordText: {
-    color: '#007AFF',
+  errorText: {
+    color: '#dc2626',
     fontSize: 14,
-    fontWeight: '500',
+    marginTop: 4,
+  },
+  actionBtnDisabled: {
+    opacity: 0.7,
   },
 });
 
-export default SignInScreen; 
+export default SignInScreen;
