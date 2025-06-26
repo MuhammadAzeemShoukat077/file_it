@@ -10,10 +10,12 @@ import {
   Dimensions,
   Image,
   Modal,
+  Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import Icon from '../components/Icon';
+import { ICONS } from '../constants/icons';
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -21,6 +23,8 @@ type HomeScreenProps = {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [isScanModalVisible, setScanModalVisible] = useState(false);
+  const [isProfileModalVisible, setProfileModalVisible] = useState(false);
+  const [selectedTab] = useState('files'); // Files tab is selected by default
 
   // Sample data with image URLs (replace with your actual data)
   const galleryItems = [
@@ -95,48 +99,74 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     },
   ];
 
-  // Function to handle scanning/taking picture
-  const handleScan = () => {
-    setScanModalVisible(false);
-    navigation.navigate('Camera');
-  };
-
-  // Function to handle uploading from gallery
-  const handleUploadFromGallery = () => {
-    // TODO: Implement gallery picker
-    setScanModalVisible(false);
-  };
-
-  // Function to handle upload to Google Cloud Storage
-  // const handleUploadToCloud = async (imageUri: string) => {
-  //   // TODO: Implement Google Cloud Storage upload
-  //   try {
-  //     // 1. Get signed URL from your backend
-  //     // 2. Upload image to Google Cloud Storage
-  //     // 3. Save metadata to your database
-  //     // 4. Update local state
-  //   } catch (error) {
-  //     console.error('Upload failed:', error);
-  //   }
-  // };
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.headerContainer}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>My Documents</Text>
-          <View style={styles.headerRight}>
+          <View>
             <TouchableOpacity 
-              style={styles.scanButton}
-              onPress={() => setScanModalVisible(true)}
+              style={styles.profileButton}
+              onPress={() => setProfileModalVisible(!isProfileModalVisible)}
             >
-              <Icon name="scan-outline" size={22} color="#fff" />
-              <Text style={styles.scanText}>Scan</Text>
+              <Icon 
+                name={ICONS.AVATAR.name}
+                size={32} 
+                color="#007AFF" 
+              />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.profileButton}>
-              <Icon name="person" size={20} color="#666" />
-            </TouchableOpacity>
+            {isProfileModalVisible && (
+              <View style={styles.profileDropdown}>
+                <TouchableOpacity 
+                  style={styles.profileDropdownItem}
+                  onPress={() => {
+                    setProfileModalVisible(false);
+                    // Navigate to profile screen
+                    // navigation.navigate('Profile');
+                  }}
+                >
+                  <Icon 
+                    name={ICONS.PERSON.name}
+                    size={20} 
+                    color="#007AFF" 
+                  />
+                  <Text style={styles.profileDropdownText}>Profile</Text>
+                </TouchableOpacity>
+                <View style={styles.dropdownDivider} />
+                <TouchableOpacity 
+                  style={styles.profileDropdownItem}
+                  onPress={() => {
+                    setProfileModalVisible(false);
+                    // Handle logout
+                    Alert.alert(
+                      'Logout',
+                      'Are you sure you want to logout?',
+                      [
+                        {
+                          text: 'Cancel',
+                          style: 'cancel'
+                        },
+                        {
+                          text: 'Logout',
+                          style: 'destructive',
+                          onPress: () => {
+                            // Handle logout logic
+                          }
+                        }
+                      ]
+                    );
+                  }}
+                >
+                  <Icon 
+                    name={ICONS.LOGOUT.name}
+                    size={20} 
+                    color="#FF3B30" 
+                  />
+                  <Text style={[styles.profileDropdownText, { color: '#FF3B30' }]}>Logout</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -179,20 +209,36 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <View style={styles.bottomNavContainer}>
         <View style={styles.bottomNav}>
           <TouchableOpacity style={styles.navItem}>
-            <Icon name="images-outline" size={24} color="#fff" />
-            <Text style={styles.navText}>Gallery</Text>
+            {selectedTab === 'files' && <View style={styles.selectedIndicator} />}
+            <Icon 
+              name={ICONS.FILES.name}
+              size={24} 
+              color="#fff" 
+            />
+            <Text style={[styles.navText, selectedTab === 'files' && styles.navTextSelected]}>Files</Text>
           </TouchableOpacity>
+          
           <TouchableOpacity 
             style={[styles.navItem, styles.scanNavItem]}
             onPress={() => setScanModalVisible(true)}
           >
             <View style={styles.scanIconContainer}>
-              <Icon name="scan" size={32} color="#fff" />
+              <Icon 
+                name={ICONS.CAMERA_OUTLINE.name}
+                size={32} 
+                color="#fff" 
+              />
             </View>
           </TouchableOpacity>
+          
           <TouchableOpacity style={styles.navItem}>
-            <Icon name="folder-outline" size={24} color="#fff" />
-            <Text style={styles.navText}>Files</Text>
+            {selectedTab === 'gallery' && <View style={styles.selectedIndicator} />}
+            <Icon 
+              name={ICONS.GALLERY.name}
+              size={24} 
+              color="#fff" 
+            />
+            <Text style={styles.navText}>Gallery</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -200,29 +246,40 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       {/* Scan Modal */}
       <Modal
         visible={isScanModalVisible}
-        transparent
+        transparent={true}
         animationType="slide"
         onRequestClose={() => setScanModalVisible(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Document</Text>
-            
-            <TouchableOpacity style={styles.modalButton} onPress={handleScan}>
-              <Icon name="camera-outline" size={24} color="#007AFF" />
-              <Text style={styles.modalButtonText}>Take Picture</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.modalButton} onPress={handleUploadFromGallery}>
-              <Icon name="images-outline" size={24} color="#007AFF" />
-              <Text style={styles.modalButtonText}>Choose from Gallery</Text>
-            </TouchableOpacity>
-
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle]}>Select Option</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setScanModalVisible(false)}
+              >
+                <Icon name="close" size={24} color="#007AFF" />
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity 
-              style={styles.modalCancelButton}
-              onPress={() => setScanModalVisible(false)}
+              style={styles.modalOption}
+              onPress={() => {
+                setScanModalVisible(false);
+                navigation.navigate('Camera');
+              }}
             >
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Icon name={ICONS.CAMERA_OUTLINE.name} size={24} color="#007AFF" />
+              <Text style={styles.modalOptionText}>Take Picture</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.modalOption}
+              onPress={() => {
+                setScanModalVisible(false);
+                // TODO: Implement gallery picker
+              }}
+            >
+              <Icon name={ICONS.GALLERY_OUTLINE.name} size={24} color="#007AFF" />
+              <Text style={styles.modalOptionText}>Choose from Gallery</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -255,31 +312,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A1A1A',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  scanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-  },
-  scanText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#007AFF',
   },
   profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#F0F0F0',
     justifyContent: 'center',
     alignItems: 'center',
@@ -324,7 +362,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bottomNavContainer: {
-    backgroundColor: '#333',
+    backgroundColor: '#0066CC',
     paddingBottom: Platform.OS === 'ios' ? 34 : 16,
   },
   bottomNav: {
@@ -336,6 +374,8 @@ const styles = StyleSheet.create({
   navItem: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+    minWidth: 70,
   },
   scanNavItem: {
     marginTop: -30,
@@ -361,6 +401,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
+  navTextSelected: {
+    fontWeight: '600',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -372,14 +415,24 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 20,
   },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000',
-    marginBottom: 20,
-    textAlign: 'center',
   },
-  modalButton: {
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOption: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
@@ -387,22 +440,53 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     marginBottom: 12,
   },
-  modalButtonText: {
+  modalOptionText: {
     fontSize: 16,
     color: '#007AFF',
     marginLeft: 12,
   },
-  modalCancelButton: {
-    padding: 16,
-    borderRadius: 12,
+  profileDropdown: {
+    position: 'absolute',
+    top: 50,
+    right: 0,
     backgroundColor: '#fff',
-    marginTop: 8,
+    borderRadius: 12,
+    padding: 8,
+    minWidth: 180,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1000,
   },
-  modalCancelText: {
+  profileDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+  },
+  profileDropdownText: {
     fontSize: 16,
-    color: '#FF3B30',
-    textAlign: 'center',
-    fontWeight: '600',
+    marginLeft: 12,
+    color: '#007AFF',
+  },
+  dropdownDivider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+    marginVertical: 4,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    bottom: -16,
+    left: '15%',
+    right: '15%',
+    height: 3,
+    backgroundColor: '#fff',
+    borderRadius: 1.5,
   },
 });
 

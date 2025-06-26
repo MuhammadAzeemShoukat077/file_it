@@ -3,7 +3,8 @@ import { StyleSheet, View, TouchableOpacity, Text, Platform, Image } from 'react
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '../components/Icon';
+import { ICONS } from '../constants/icons';
 
 type CameraScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Camera'>;
@@ -82,7 +83,11 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ navigation }) => {
             style={styles.previewButton}
             onPress={handleRetake}
           >
-            <Icon name="refresh-outline" size={24} color="#fff" />
+            <Icon 
+              name={ICONS.RETAKE.name}
+              size={24} 
+              color="#fff" 
+            />
             <Text style={styles.previewButtonText}>Retake</Text>
           </TouchableOpacity>
           
@@ -90,7 +95,11 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ navigation }) => {
             style={[styles.previewButton, styles.uploadButton]}
             onPress={handleUpload}
           >
-            <Icon name="cloud-upload-outline" size={24} color="#fff" />
+            <Icon 
+              name={ICONS.UPLOAD.name}
+              size={24} 
+              color="#fff" 
+            />
             <Text style={styles.previewButtonText}>Upload</Text>
           </TouchableOpacity>
         </View>
@@ -115,7 +124,11 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="close" size={24} color="#fff" />
+          <Icon 
+            name={ICONS.CLOSE.name}
+            size={24} 
+            color="#fff" 
+          />
         </TouchableOpacity>
 
         <View style={styles.bottomControls}>

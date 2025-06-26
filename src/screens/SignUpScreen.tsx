@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#000',
+    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   toggleBtnText: {
-    color: '#000',
+    color: '#007AFF',
     fontWeight: '600',
   },
 });

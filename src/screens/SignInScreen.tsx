@@ -174,11 +174,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#000',
+    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#007AFF',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   toggleBtnText: {
-    color: '#000',
+    color: '#007AFF',
     fontWeight: '600',
   },
   forgotPasswordContainer: {
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   forgotPasswordText: {
-    color: '#000',
+    color: '#007AFF',
     fontSize: 14,
     fontWeight: '500',
   },

@@ -85,11 +85,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   actionBtn: {
-    backgroundColor: '#000',
+    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   toggleBtnText: {
-    color: '#000',
+    color: '#007AFF',
     fontWeight: '600',
   },
 });
