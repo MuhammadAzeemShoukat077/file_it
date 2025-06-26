@@ -16,15 +16,36 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import Icon from '../components/Icon';
 import { ICONS } from '../constants/icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { setUserData } from '../reducers/slices/UserSlice';
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
 };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [isScanModalVisible, setScanModalVisible] = useState(false);
   const [isProfileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedTab] = useState('files'); // Files tab is selected by default
+
+  const handleLogout = async () => {
+    try {
+      // Clear the auth token
+      await AsyncStorage.clear();
+      // Clear the user data from Redux
+      dispatch(setUserData(null));
+      // Navigate to SignIn screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SignIn' }],
+      });
+    } catch (error) {
+      console.error('Logout Error:', error);
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    }
+  };
 
   // Sample data with image URLs (replace with your actual data)
   const galleryItems = [
@@ -150,9 +171,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                         {
                           text: 'Logout',
                           style: 'destructive',
-                          onPress: () => {
-                            // Handle logout logic
-                          }
+                          onPress: handleLogout
                         }
                       ]
                     );

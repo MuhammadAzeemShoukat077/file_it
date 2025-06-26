@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TextInput, Text, StyleSheet } from 'react-native';
 import generalStyle from '../styles/index';
-import THEME from '../../config/theme';
+import THEME from '../config/theme';
 
 const InputField = ({ type, placeholder, formik, label, name }) => {
   const value = formik.values[name];
