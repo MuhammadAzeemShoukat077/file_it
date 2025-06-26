@@ -1,0 +1,130 @@
+import React from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  Text,
+} from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
+
+type OTPVerificationScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'OTPVerification'>;
+};
+
+const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigation }) => {
+  return (
+    <View style={styles.wrapper}>
+      <Text style={styles.formHeadText}>Verify OTP</Text>
+      
+      <Text style={styles.description}>
+        Please enter the verification code sent to your email address.
+      </Text>
+
+      <View style={styles.otpContainer}>
+        <TextInput
+          style={styles.otpInput}
+          maxLength={1}
+          keyboardType="number-pad"
+          placeholderTextColor="#999"
+        />
+        <TextInput
+          style={styles.otpInput}
+          maxLength={1}
+          keyboardType="number-pad"
+          placeholderTextColor="#999"
+        />
+        <TextInput
+          style={styles.otpInput}
+          maxLength={1}
+          keyboardType="number-pad"
+          placeholderTextColor="#999"
+        />
+        <TextInput
+          style={styles.otpInput}
+          maxLength={1}
+          keyboardType="number-pad"
+          placeholderTextColor="#999"
+        />
+      </View>
+
+      <View style={styles.btnContainer}>
+        <TouchableOpacity 
+          style={styles.actionBtn}
+          onPress={() => navigation.navigate('ResetPassword')}
+        >
+          <Text style={styles.actionBtnText}>Verify OTP</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.resendContainer}>
+        <Text style={styles.toggleText}>
+          Didn't receive code? <Text style={styles.toggleBtnText}>Resend</Text>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  formHeadText: {
+    fontSize: 35,
+    fontWeight: '600',
+    paddingVertical: 50,
+    color: '#000',
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  otpInput: {
+    width: 60,
+    height: 60,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    fontSize: 24,
+    textAlign: 'center',
+    color: '#000',
+  },
+  btnContainer: {
+    marginTop: 20,
+  },
+  actionBtn: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  actionBtnText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  resendContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  toggleText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  toggleBtnText: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+});
+
+export default OTPVerificationScreen; 
