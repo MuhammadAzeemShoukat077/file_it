@@ -21,6 +21,7 @@ import { axiosInstance, ApiResponse } from '../config/axiosInterceptor';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import InputField from '../components/InputField';
+import { showSuccessMessage, showErrorMessage } from '../helpers/helper';
 
 type SignUpScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
@@ -43,7 +44,7 @@ const validationSchema = Yup.object().shape({
     .min(8, 'Password must be at least 8 characters')
     .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .matches(/[0-9]/, 'Password must contain at least one number')
-    .matches(/[!@#$%^&*]/, 'Password must contain at least one special character')
+    // .matches(/[!@#$%^&*]/, 'Password must contain at least one special character')
     .required('Password is required'),
 });
 
@@ -91,6 +92,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
       });
 
       if (response.data?.status) {
+        showSuccessMessage(response.data);
         const userData = {
           id: response.data.data.user.id.toString(),
           fullName: response.data.data.user.fullName,
@@ -106,6 +108,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           routes: [{ name: 'SignIn' }],
         });
       } else {
+        showErrorMessage(response.data);
         setApiError(response.data?.message || 'Registration failed');
       }
     } catch (error: any) {
@@ -115,6 +118,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         status: error.response?.status
       });
       
+      showErrorMessage(error.response?.data);
       const errorMessage = error.response?.data?.message || error.message || 'Something went wrong';
       setApiError(errorMessage);
     } finally {
@@ -203,43 +207,35 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingTop: '20%',
   },
   topSection: {
     alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 20,
   },
   logoWrapper: {
-    marginBottom: 24,
-     marginTop: 40,
+    marginBottom: 16,
   },
   logoContainer: {
     width: 120,
     height: 120,
-    borderRadius: 60,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: '100%',
+    height: '100%',
     resizeMode: 'contain',
   },
   welcomeText: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: '600',
     color: '#1A1A1A',
     marginBottom: 8,
+    textAlign: 'center',
   },
   formSection: {
-    paddingHorizontal: 22,
-    paddingBottom: 24,
+    paddingHorizontal: 24,
+    paddingTop: 32,
   },
   btnContainer: {
     marginTop: 24,
@@ -247,7 +243,7 @@ const styles = StyleSheet.create({
   actionBtn: {
     backgroundColor: '#007AFF',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
     shadowColor: '#007AFF',
     shadowOffset: {
@@ -260,7 +256,7 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   toggleContainer: {
@@ -268,15 +264,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
   },
   toggleBtnText: {
     color: '#007AFF',
     fontWeight: '600',
-  },
-  inputError: {
-    borderColor: '#dc2626',
   },
   errorText: {
     color: '#dc2626',

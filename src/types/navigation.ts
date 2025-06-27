@@ -4,13 +4,12 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   OTPVerification: undefined;
   ResetPassword: undefined;
-  Home: { capturedImage?: string } | undefined;
+  Home: undefined;
   DetailCard: {
     id: number;
     title: string;
     date: string;
-    address: string;
-    image: any;
+    image: { uri: string } | any;
   };
   GetStarted: undefined;
   Camera: undefined;

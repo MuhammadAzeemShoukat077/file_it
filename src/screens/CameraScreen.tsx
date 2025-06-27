@@ -1,19 +1,25 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Platform, Image } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Platform, Image, ActivityIndicator } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import Icon from '../components/Icon';
 import { ICONS } from '../constants/icons';
+import { axiosInstance } from '../config/axiosInterceptor';
+import { useDispatch } from 'react-redux';
+import { addMedia, setLoading } from '../reducers/slices/MediaSlice';
+import { showSuccessMessage, showErrorMessage } from '../helpers/helper';
 
 type CameraScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Camera'>;
 };
 
 const CameraScreen: React.FC<CameraScreenProps> = ({ navigation }) => {
+  const dispatch = useDispatch();
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const camera = useRef<Camera>(null);
   const device = useCameraDevice('back');
 
@@ -52,9 +58,51 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ navigation }) => {
     setPhotoPath(null);
   };
 
-  const handleUpload = () => {
-    if (photoPath) {
-      navigation.navigate('Home', { capturedImage: photoPath });
+  const handleUpload = async () => {
+    if (!photoPath) return;
+
+    try {
+      setIsUploading(true);
+      dispatch(setLoading(true));
+      console.log('[UPLOAD] Starting upload for:', photoPath);
+      
+      // Create form data
+      const formData = new FormData();
+      formData.append('file', {
+        uri: photoPath,
+        type: 'image/jpeg',
+        name: 'photo.jpg',
+      } as any);
+
+      console.log('[UPLOAD] Sending request with formData:', {
+        uri: photoPath,
+        type: 'image/jpeg',
+        name: 'photo.jpg'
+      });
+
+      const response = await axiosInstance.post('/api/media/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+        },
+      });
+
+      console.log('[UPLOAD] Response:', JSON.stringify(response.data, null, 2));
+
+      if (response.data?.status && response.data?.data) {
+        console.log('[UPLOAD] Upload successful:', response.data.data);
+        showSuccessMessage(response.data);
+        dispatch(addMedia(response.data.data));
+        navigation.goBack(); // Go back to HomeScreen after successful upload
+      } else {
+        throw new Error(response.data?.message || 'Upload failed');
+      }
+    } catch (err: any) {
+      console.error('[UPLOAD] Error:', err.message);
+      showErrorMessage(err.response?.data || { message: err.message || 'Failed to upload. Please try again.' });
+    } finally {
+      setIsUploading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -82,6 +130,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ navigation }) => {
           <TouchableOpacity 
             style={styles.previewButton}
             onPress={handleRetake}
+            disabled={isUploading}
           >
             <Icon 
               name={ICONS.RETAKE.name}
@@ -94,13 +143,20 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ navigation }) => {
           <TouchableOpacity 
             style={[styles.previewButton, styles.uploadButton]}
             onPress={handleUpload}
+            disabled={isUploading}
           >
-            <Icon 
-              name={ICONS.UPLOAD.name}
-              size={24} 
-              color="#fff" 
-            />
-            <Text style={styles.previewButtonText}>Upload</Text>
+            {isUploading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Icon 
+                  name={ICONS.UPLOAD.name}
+                  size={24} 
+                  color="#fff" 
+                />
+                <Text style={styles.previewButtonText}>Upload</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </View>

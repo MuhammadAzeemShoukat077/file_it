@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,14 +11,20 @@ import {
   Image,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import Icon from '../components/Icon';
 import { ICONS } from '../constants/icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setUserData } from '../reducers/slices/UserSlice';
+import { setMediaData, setLoading } from '../reducers/slices/MediaSlice';
+import { RootState } from '../types/store';
+import { axiosInstance } from '../config/axiosInterceptor';
+import LogoutModal from '../components/LogoutModal';
+import { showSuccessMessage, showErrorMessage } from '../helpers/helper';
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -26,99 +32,69 @@ type HomeScreenProps = {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const dispatch = useDispatch();
+  const mediaState = useSelector((state: RootState) => state.media);
+  const mediaData = mediaState?.mediaData || [];
+  const loading = mediaState?.loading || false;
+  
+  console.log('[HOME] Media State:', mediaState);
+  console.log('[HOME] Current mediaData:', mediaData);
+  
   const [isScanModalVisible, setScanModalVisible] = useState(false);
   const [isProfileModalVisible, setProfileModalVisible] = useState(false);
-  const [selectedTab] = useState('files'); // Files tab is selected by default
+  const [isLogoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [selectedTab] = useState('files');
+
+  const fetchMediaFiles = useCallback(async () => {
+    try {
+      dispatch(setLoading(true));
+      console.log('[FETCH] Requesting media files...');
+      const response = await axiosInstance.get('/api/media/?page=1&pageSize=20');
+      console.log('[FETCH] Full Response:', JSON.stringify(response.data, null, 2));
+      
+      if (response.data?.status && response.data?.data?.data) {
+        const mediaFiles = response.data.data.data;
+        console.log('[FETCH] Setting media data:', mediaFiles);
+        dispatch(setMediaData(mediaFiles));
+      } else {
+        console.log('[FETCH] No data found, setting empty array');
+        dispatch(setMediaData([]));
+      }
+    } catch (err: any) {
+      console.error('[FETCH] Exception:', err.message);
+      dispatch(setMediaData([]));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    fetchMediaFiles();
+  }, [fetchMediaFiles]);
+
+  // Refresh media list when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('[HOME] Screen focused, refreshing media list');
+      fetchMediaFiles();
+    });
+
+    return unsubscribe;
+  }, [navigation, fetchMediaFiles]);
 
   const handleLogout = async () => {
     try {
-      // Clear the auth token
       await AsyncStorage.clear();
-      // Clear the user data from Redux
       dispatch(setUserData(null));
-      // Navigate to SignIn screen
+      showSuccessMessage({ status: true, message: 'Logged out successfully' });
       navigation.reset({
         index: 0,
         routes: [{ name: 'SignIn' }],
       });
-    } catch (error) {
-      console.error('Logout Error:', error);
-      Alert.alert('Error', 'Failed to logout. Please try again.');
+    } catch (err) {
+      console.error('Logout Error:', err);
+      showErrorMessage({ message: 'Failed to logout. Please try again.' });
     }
   };
-
-  // Sample data with image URLs (replace with your actual data)
-  const galleryItems = [
-    {
-      id: 1,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 2,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 3,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 4,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 5,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 6,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 7,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 8,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-    {
-      id: 9,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },{
-      id: 10,
-      title: 'Home Depot',
-      date: '25-03-2023',
-      address: '540 Monroe des Plaines, Tennessee',
-      image: require('../assets/background.jpg'), 
-    },
-  ];
 
   return (
     <View style={styles.container}>
@@ -159,22 +135,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   style={styles.profileDropdownItem}
                   onPress={() => {
                     setProfileModalVisible(false);
-                    // Handle logout
-                    Alert.alert(
-                      'Logout',
-                      'Are you sure you want to logout?',
-                      [
-                        {
-                          text: 'Cancel',
-                          style: 'cancel'
-                        },
-                        {
-                          text: 'Logout',
-                          style: 'destructive',
-                          onPress: handleLogout
-                        }
-                      ]
-                    );
+                    setLogoutModalVisible(true);
                   }}
                 >
                   <Icon 
@@ -182,7 +143,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     size={20} 
                     color="#FF3B30" 
                   />
-                  <Text style={[styles.profileDropdownText, { color: '#FF3B30' }]}>Logout</Text>
+                  <Text style={[styles.profileDropdownText, styles.logoutText]}>Logout</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -196,32 +157,47 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.galleryGrid}>
-          {galleryItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.galleryItem}
-              onPress={() => navigation.navigate('DetailCard', {
+          {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : mediaData && mediaData.length > 0 ? (
+            mediaData.map((item) => {
+              console.log('[HOME] Rendering media item:', {
                 id: item.id,
-                title: item.title,
-                date: item.date,
-                address: item.address,
-                image: item.image,
-                // cloudUrl: item.cloudUrl // Add cloud storage URL
-              })}
-            >
-              <Image
-                source={item.image}
-                style={styles.galleryImage}
-                resizeMode="cover"
-              />
-              <View style={styles.imageOverlay}>
-                <Text style={styles.imageTitle} numberOfLines={1}>
-                  {item.title}
-                </Text>
-                <Text style={styles.imageDate}>{item.date}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                publicUrl: item.publicUrl,
+                originalName: item.originalName
+              });
+              
+              return item?.id ? (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.galleryItem}
+                  onPress={() => navigation.navigate('DetailCard', {
+                    id: item.id,
+                    title: item.originalName || 'Untitled',
+                    date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'No date',
+                    image: { uri: item.publicUrl }
+                  })}
+                >
+                  <Image
+                    source={{ uri: item.publicUrl }}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                    defaultSource={require('../assets/background.jpg')}
+                  />
+                  <View style={styles.imageOverlay}>
+                    <Text style={styles.imageTitle} numberOfLines={1}>
+                      {item.originalName || 'Untitled'}
+                    </Text>
+                    <Text style={styles.imageDate}>
+                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'No date'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ) : null;
+            })
+          ) : (
+            <Text style={styles.noDataText}>No media files found</Text>
+          )}
         </View>
       </ScrollView>
       
@@ -303,6 +279,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Logout Modal */}
+      <LogoutModal 
+        visible={isLogoutModalVisible}
+        onClose={() => setLogoutModalVisible(false)}
+        onLogout={handleLogout}
+      />
     </View>
   );
 };
@@ -506,6 +489,21 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: '#fff',
     borderRadius: 1.5,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  noDataText: {
+    color: '#666',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  logoutText: {
+    color: '#FF3B30',
   },
 });
 

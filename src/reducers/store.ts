@@ -10,8 +10,10 @@ const rootReducer = combineReducers({
   Theme,
   DeviceData,
   MasterData,
-  media,
+  media
 });
+
+export type RootState = ReturnType<typeof rootReducer>;
 
 const store = configureStore({
   reducer: rootReducer,
@@ -24,4 +26,4 @@ const store = configureStore({
 
 export const { dispatch, getState } = store;
 
-export default store;
+export default store; 
